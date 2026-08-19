@@ -1,0 +1,627 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>旋盤マイスター - Lathe Craft Workshop</title>
+  <link rel="stylesheet" href="css/style.css">
+  <meta name="description" content="ブラウザで本格的な旋盤切削加工が体験できるシミュレーションゲーム">
+  <link rel="icon" href="favicon.ico" sizes="any">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon.png">
+  <link rel="manifest" href="site.webmanifest">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="旋盤マイスター">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#1e293b">
+</head>
+
+<body>
+  <div id="appContainer">
+    <!-- Top Workshop Header -->
+    <header class="app-header">
+      <div class="logo-area">
+        <span class="logo-icon">⚙️</span>
+        <h1 class="game-title">旋盤マイスター <span class="subtitle">Lathe Craft Workshop</span></h1>
+      </div>
+
+      <div class="header-stats">
+        <div class="stat-badge money-badge">
+          <span class="stat-label">所持金:</span>
+          <span class="stat-value" id="playerMoney">¥500</span>
+        </div>
+        <div class="stat-badge rep-badge">
+          <span class="stat-label">工房の評判:</span>
+          <span class="stat-value" id="playerReputation">0 Pt</span>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button id="btnPowerMode" class="header-btn" title="フレームレートと発熱・バッテリー消費の調整">⚡ 標準 60FPS</button>
+        <button id="btnMuteAudio" class="header-btn">🔊 サウンド</button>
+        <button id="btnOpenHelp" class="header-btn highlight">📖 操作説明</button>
+        <button id="btnResetGame" class="header-btn danger" title="所持金・評判・すべての納品実績を初期状態にリセット">🔄 リセット</button>
+      </div>
+    </header>
+
+    <!-- Main Workspace Layout -->
+    <main class="main-layout">
+      <!-- Left Mission & Job Panel -->
+      <aside class="sidebar-panel">
+        <div class="panel-section">
+          <div class="section-title-row">
+            <h2 class="section-title">📋 現在の依頼オーダー</h2>
+            <div class="order-action-buttons">
+              <button id="btnRandomMission" class="btn-action-sm random" title="ランダムな特注製品を生成して受注">🎲 ランダム製品</button>
+              <button id="btnOpenMissions" class="btn-action-sm">受注変更</button>
+            </div>
+          </div>
+          <div class="mission-info-box" id="missionInfoBox">
+            <!-- Target Finished Product Preview UI -->
+            <div class="target-preview-panel" id="targetPreviewPanel">
+              <div class="preview-header">
+                <span class="preview-title">📐 完成品イメージ / 図面</span>
+                <span class="preview-spec-badge" id="previewSpecBadge">L: 100mm</span>
+              </div>
+              <div class="preview-canvas-box" id="previewCanvasBox" title="クリックでオーバーレイ表示（完成予定品 ⇄ 削る範囲 ⇄ OFF）を切替">
+                <canvas id="missionTargetCanvas" width="310" height="130"></canvas>
+                <div class="preview-target-tag" id="previewTargetTag">完成目標形状</div>
+                <div class="preview-ghost-hint" id="previewGhostHint">👆 クリックで表示切替</div>
+              </div>
+              <div class="overlay-mode-selector">
+                <button class="btn-overlay-mode" data-mode="target" id="btnOverlayTarget" title="理想の完成予定品の形のみを半透明でスッキリ透過表示">
+                  <span class="mode-icon">🎯</span>
+                  <span class="mode-label">完成予定品</span>
+                </button>
+                <button class="btn-overlay-mode" data-mode="cutArea" id="btnOverlayCutArea" title="素材から削り落とすべき余肉エリアのみをオレンジでハイライト表示">
+                  <span class="mode-icon">✂️</span>
+                  <span class="mode-label">削る範囲</span>
+                </button>
+                <button class="btn-overlay-mode active" data-mode="none" id="btnOverlayNone" title="オーバーレイ表示をOFFにする">
+                  <span class="mode-icon">✖</span>
+                  <span class="mode-label">OFF</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="info-row main-job">
+              <span class="info-label">品名:</span>
+              <span class="info-value highlight" id="missionTitle">木製ノックピンの製作</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">依頼主:</span>
+              <span class="info-value" id="missionClient">家具工房「タナカ木工」</span>
+            </div>
+
+            <!-- Enhanced High-Visibility Material Info Card -->
+            <div class="mission-material-card" id="missionMaterialCard">
+              <div class="mat-card-header">
+                <span class="mat-card-label">📦 指定素材</span>
+                <span class="mat-hardness-tag" id="missionMatHardness">硬度: ★☆☆☆☆</span>
+              </div>
+              <div class="mat-card-body">
+                <div class="mat-color-chip" id="missionMatColorChip">
+                  <span class="mat-chip-icon" id="missionMatIcon">🪵</span>
+                </div>
+                <div class="mat-info-text">
+                  <div class="mat-name-row">
+                    <strong class="mat-name" id="missionMaterial">木材 (ヒノキ)</strong>
+                    <span class="mat-category-tag" id="missionMatCategory">木質素材</span>
+                  </div>
+                  <div class="mat-feature-tags" id="missionMatFeatures">
+                    <span class="mat-feat-pill">初心者向け</span>
+                    <span class="mat-feat-pill">サクサク切削</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="info-row" style="margin-top: 8px;">
+              <span class="info-label">許容公差:</span>
+              <span class="info-value" id="missionTolerance">±6.0 mm</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">基本報酬:</span>
+              <span class="info-value reward" id="missionReward">¥300</span>
+            </div>
+            <p class="mission-desc" id="missionDesc">家具のダボ継ぎに使うシンプルな段付きピンを作ってほしい。</p>
+
+            <!-- Auto-Advance on Delivery Toggle -->
+            <div class="order-delivery-mode-box">
+              <label class="checkbox-label" title="納品が完了した際に、自動で次のランダム特注製品へ切り替えて素材をセットします">
+                <input type="checkbox" id="chkAutoAdvanceOrder" checked>
+                <span>🔄 納品時に自動で次の製品へ更新</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel-section quick-nav">
+          <button id="btnOpenShop" class="nav-card shop-card">
+            <div class="nav-icon">🏪</div>
+            <div class="nav-text">
+              <strong>設備・工具ショップ</strong>
+              <small>バイト強化・DRO・自動送り導入</small>
+            </div>
+          </button>
+
+          <button id="btnOpenFreeMode" class="nav-card free-card">
+            <div class="nav-icon">🪵</div>
+            <div class="nav-text">
+              <strong>自由工作 (フリーモード)</strong>
+              <small>素材を選んで自由に削り出し</small>
+            </div>
+          </button>
+        </div>
+
+        <!-- Digital Readout (DRO) Panel -->
+        <div class="panel-section dro-section" id="droDisplayPanel">
+          <h2 class="section-title">📟 デジタルリードアウト (DRO)</h2>
+          <div id="droLockedNotice" class="locked-notice">※ショップで「DRO」を購入すると高精度デジタル表示が解放されます</div>
+          <div class="dro-grid">
+            <div class="dro-cell">
+              <span class="dro-label">Z 軸 (長手位置)</span>
+              <span class="dro-num" id="droZ">0.00</span> <span class="dro-unit">mm</span>
+            </div>
+            <div class="dro-cell">
+              <span class="dro-label">X 軸 (刃先位置)</span>
+              <span class="dro-num" id="droX">0.00</span> <span class="dro-unit">mm</span>
+            </div>
+            <div class="dro-cell">
+              <span class="dro-label">現在外径 φ</span>
+              <span class="dro-num current" id="droDia">0.00</span> <span class="dro-unit">mm</span>
+            </div>
+            <div class="dro-cell">
+              <span class="dro-label">目標外径 φ</span>
+              <span class="dro-num target" id="droTarget">0.00</span> <span class="dro-unit">mm</span>
+            </div>
+            <div class="dro-cell full-width">
+              <span class="dro-label">目標との誤差 Δ</span>
+              <span class="dro-num delta" id="droDelta">0.00</span> <span class="dro-unit">mm</span>
+            </div>
+            <div class="dro-cell full-width">
+              <div class="dro-label-row">
+                <span class="dro-label">表面研磨度 (ツヤ)</span>
+                <span class="dro-gloss-badge" id="droGlossBadge">粗削り</span>
+              </div>
+              <div class="dro-rough-row">
+                <span class="dro-num" id="droRough">20%</span>
+                <div class="dro-gloss-bar-track">
+                  <div class="dro-gloss-bar-fill" id="droGlossBar" style="width: 20%;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Center Lathe Machine Viewport & Controls -->
+      <section class="machine-container">
+        <!-- Phone-only information row kept outside the interactive canvas -->
+        <div class="mobile-machine-info" aria-label="加工素材と完成見本">
+          <div class="mobile-material-summary">
+            <span id="mobileMatIcon">🪵</span>
+            <strong id="mobileMatName">木材（ヒノキ）</strong>
+            <span id="mobileMatHardness">★☆☆☆☆</span>
+          </div>
+          <button type="button" id="btnMobileTarget" class="btn-mobile-target">🎯 完成形を見る</button>
+        </div>
+
+        <!-- Lathe Canvas Viewport -->
+        <div class="canvas-wrapper">
+          <canvas id="latheCanvas"></canvas>
+
+          <!-- Floating Toast Notification for new missions -->
+          <div id="orderToastNotification" class="order-toast-notification" style="display: none;">
+            <span class="toast-icon">✨</span>
+            <span class="toast-message" id="toastMessage">納品完了！次の特注製品を受注しました</span>
+          </div>
+
+          <!-- On-screen Target Product Preview HUD -->
+          <div class="target-product-hud" id="targetProductHud">
+            <div class="hud-header">
+              <span class="hud-title">🎯 完成目標形状</span>
+              <button class="btn-hud-toggle" id="btnToggleHud" title="HUD最小化/展開">−</button>
+            </div>
+            <div class="hud-body" id="hudBody">
+              <canvas id="hudTargetCanvas" width="220" height="90"></canvas>
+              <div class="hud-info-bar">
+                <span id="hudTargetName">木製ノックピン</span>
+                <span id="hudTargetSpec">L:100mm</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- On-screen Current Material Badge HUD -->
+          <div class="lathe-material-hud" id="latheMaterialHud">
+            <div class="hud-mat-swatch" id="hudMatSwatch" style="background: linear-gradient(135deg, #c49a6c, #8b5a2b);">🪵</div>
+            <div class="hud-mat-info">
+              <div class="hud-mat-title">
+                <span class="hud-mat-label">素材:</span>
+                <strong id="hudMatName">木材 (ヒノキ)</strong>
+              </div>
+              <span class="hud-mat-hardness" id="hudMatHardness">硬度: ★☆☆☆☆ (極軟)</span>
+            </div>
+          </div>
+
+          <div class="canvas-hints">
+            <span class="desktop-canvas-hint">🖐️ バイトドラッグ / 🕹️微調整ジョグ / WASD</span>
+            <span class="desktop-canvas-hint">✨ サンドペーパーで磨いて光沢アップ！</span>
+            <span class="mobile-canvas-hint">🖐️ ドラッグ：加工　✨ サンドペーパー：仕上げ</span>
+          </div>
+        </div>
+
+        <div class="mobile-canvas-hints" aria-label="操作ヒント">
+          🖐 ドラッグ：加工　🕹 微調整　✨ 磨き：サンドペーパー
+        </div>
+
+        <!-- Machine Control Panel -->
+        <div class="controls-panel">
+          <!-- Tool Palette -->
+          <div class="tool-palette-container">
+            <div class="palette-header">
+              <span class="palette-title">🛠️ 加工ツール選択</span>
+              <span class="tool-desc-inline" id="currentToolDesc">幅広で一気に削れる荒加工用。平面を素早く成形するのに最適。</span>
+            </div>
+            <div class="tool-buttons-row">
+              <button class="tool-btn active" data-tool="roughing">
+                <span class="tool-icon">⬛</span>
+                <span class="tool-name">平バイト</span>
+              </button>
+              <button class="tool-btn" data-tool="pointed">
+                <span class="tool-icon">🔻</span>
+                <span class="tool-name">剣バイト (溝)</span>
+              </button>
+              <button class="tool-btn" data-tool="round">
+                <span class="tool-icon">🔴</span>
+                <span class="tool-name">丸バイト (R)</span>
+              </button>
+              <button class="tool-btn" data-tool="parting">
+                <span class="tool-icon">❙</span>
+                <span class="tool-name">突っ切り</span>
+              </button>
+              <button class="tool-btn finisher" data-tool="sandpaper">
+                <span class="tool-icon">✨</span>
+                <span class="tool-name">耐水ペーパー</span>
+              </button>
+              <button class="tool-btn measuring" data-tool="caliper">
+                <span class="tool-icon">📏</span>
+                <span class="tool-name">測定ノギス</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Mobile Precision Jog Controller (オンスクリーン微調整ジョグパッド) -->
+          <div class="mobile-jog-container" id="mobileJogContainer">
+            <div class="jog-header">
+              <span class="jog-title">🕹️ バイト微調整送り (タッチ・長押し対応)</span>
+              <div class="jog-speed-toggle">
+                <button class="btn-jog-speed active" id="btnJogSpeedNormal" data-speed="normal">微速 (0.4mm)</button>
+                <button class="btn-jog-speed" id="btnJogSpeedFast" data-speed="fast">⚡高速 (1.6mm)</button>
+              </div>
+            </div>
+            <div class="jog-pad-layout">
+              <button class="btn-jog-pad jog-up" id="btnJogUp" title="切り込み (深く削る)">
+                <span class="jog-arrow">▲</span>
+                <span class="jog-text">切削 (深さ)</span>
+              </button>
+              <div class="jog-horizontal-row">
+                <button class="btn-jog-pad jog-left" id="btnJogLeft" title="左へ送る (主軸方向)">
+                  <span class="jog-arrow">◀</span>
+                  <span class="jog-text">左送り (Z-)</span>
+                </button>
+                <div class="jog-center-badge">
+                  <span class="jog-center-icon">🎯</span>
+                  <span class="jog-center-label">微動</span>
+                </div>
+                <button class="btn-jog-pad jog-right" id="btnJogRight" title="右へ送る (心押し台方向)">
+                  <span class="jog-arrow">▶</span>
+                  <span class="jog-text">右送り (Z+)</span>
+                </button>
+              </div>
+              <button class="btn-jog-pad jog-down" id="btnJogDown" title="退避 (刃先を離す)">
+                <span class="jog-arrow">▼</span>
+                <span class="jog-text">退避 (外径)</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Bottom Control Bar -->
+          <div class="machine-actions-bar">
+            <!-- Lathe Power & Speed -->
+            <div class="action-group">
+              <button id="btnPower" class="power-btn active">⚡ 主軸稼働中 [ON]</button>
+              <div class="rpm-control">
+                <label for="rpmSlider">回転数: <strong id="rpmValueLabel">1200 RPM</strong></label>
+                <input type="range" id="rpmSlider" min="300" max="2500" step="100" value="1200">
+              </div>
+            </div>
+
+            <!-- Machine Aux Utilities -->
+            <div class="action-group">
+              <button id="btnAutoFeed" class="aux-btn disabled-btn" disabled>⚙ 自動送り [OFF]</button>
+              <button id="btnResetStock" class="aux-btn">🔄 素材リセット</button>
+            </div>
+
+            <!-- View Toggles & Overlay Mode Selector -->
+            <div class="action-group toggles">
+              <div class="overlay-select-group" title="オーバーレイ表示：完成予定品の形、または削るべき余肉ゾーンを選択できます">
+                <span class="toggle-group-label">オーバーレイ:</span>
+                <button class="btn-toggle-pill" id="btnPillTarget" data-mode="target" title="理想の完成予定品のみを半透明表示">🎯 完成予定品</button>
+                <button class="btn-toggle-pill" id="btnPillCutArea" data-mode="cutArea" title="削り落とすべき余肉ゾーンのみをハイライト表示">✂️ 削る範囲</button>
+                <button class="btn-toggle-pill active" id="btnPillNone" data-mode="none" title="オーバーレイOFF">OFF</button>
+              </div>
+              <label class="checkbox-label" title="目標寸法まで削れた箇所が鮮やかな青色に変化し、ケガキ墨付けガイドを表示します">
+                <input type="checkbox" id="chkBluing" checked>
+                <span>🖋️ 墨打ち (青ニス)</span>
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" id="chkBlueprint" checked>
+                <span>設計図ガイド</span>
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" id="chkDimensions" checked>
+                <span>寸法目盛り</span>
+              </label>
+            </div>
+
+            <!-- Deliver / Inspect Action -->
+            <div class="action-group inspect-group">
+              <button id="btnInspect" class="btn-inspect-deliver">
+                📦 完成品を検品・納品する
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Modal 1: Mission Selection -->
+    <div id="modalMissions" class="modal-overlay" style="display: none;">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3>📋 受注可能な工作オーダー一覧</h3>
+          <div class="modal-header-actions">
+            <button id="btnResetMissions" class="btn-action-sm danger" title="すべての納品実績と達成ランクをリセット">🗑️ 納品リセット</button>
+            <button class="modal-close">&times;</button>
+          </div>
+        </div>
+        <div class="modal-body" id="missionsListContainer">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal 2: Shop & Upgrades -->
+    <div id="modalShop" class="modal-overlay" style="display: none;">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3>🏪 工房設備＆切削工具ショップ</h3>
+          <button class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body" id="shopListContainer">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal 3: Free Mode Material Selection -->
+    <div id="modalFreeMode" class="modal-overlay" style="display: none;">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3>🪵 自由工作素材の選択</h3>
+          <button class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p class="modal-subtitle">加工したい素材を選んで自由に削り出しを開始できます。素材ごとに硬度・光沢・火花が異なります。</p>
+          <div class="material-grid">
+            <button class="material-card-btn btn-select-free-mat" data-material="wood">
+              <div class="mat-color-preview-box" style="background: linear-gradient(135deg, #c49a6c, #8b5a2b);">
+                <span class="mat-box-icon">🪵</span>
+              </div>
+              <div class="mat-btn-content">
+                <div class="mat-btn-title-row">
+                  <strong class="mat-card-name">木材 (ヒノキ)</strong>
+                  <span class="mat-btn-badge ease">★☆☆☆☆</span>
+                </div>
+                <span class="mat-btn-cat">木質素材 / 極軟 (サクサク切削)</span>
+                <small class="mat-btn-desc">柔らかくサクサク削れる初心者向け素材。木のぬくもりある仕上がり。</small>
+                <div class="mat-tag-list">
+                  <span class="mat-chip-pill">初心者向け</span>
+                  <span class="mat-chip-pill">サクサク切削</span>
+                  <span class="mat-chip-pill">滑らか木肌</span>
+                </div>
+              </div>
+            </button>
+
+            <button class="material-card-btn btn-select-free-mat" data-material="aluminum">
+              <div class="mat-color-preview-box" style="background: linear-gradient(135deg, #f6f8fa, #8c959f);">
+                <span class="mat-box-icon">⚙️</span>
+              </div>
+              <div class="mat-btn-content">
+                <div class="mat-btn-title-row">
+                  <strong class="mat-card-name">アルミニウム (A5052)</strong>
+                  <span class="mat-btn-badge normal">★★☆☆☆</span>
+                </div>
+                <span class="mat-btn-cat">軽金属 / 軟質 (標準金属)</span>
+                <small class="mat-btn-desc">軽快な削り心地で研磨すると美しい白銀の光沢が得られます。</small>
+                <div class="mat-tag-list">
+                  <span class="mat-chip-pill">切削性良好</span>
+                  <span class="mat-chip-pill">白銀光沢</span>
+                  <span class="mat-chip-pill">精密加工向</span>
+                </div>
+              </div>
+            </button>
+
+            <button class="material-card-btn btn-select-free-mat" data-material="brass">
+              <div class="mat-color-preview-box" style="background: linear-gradient(135deg, #f3e5ab, #997a15);">
+                <span class="mat-box-icon">🟡</span>
+              </div>
+              <div class="mat-btn-content">
+                <div class="mat-btn-title-row">
+                  <strong class="mat-card-name">真鍮 (黄銅 / C3604)</strong>
+                  <span class="mat-btn-badge medium">★★★☆☆</span>
+                </div>
+                <span class="mat-btn-cat">銅合金 / 中硬 (装飾・工芸)</span>
+                <small class="mat-btn-desc">耐水ペーパーで磨くと眩い黄金の輝きが出る高級感ある素材。</small>
+                <div class="mat-tag-list">
+                  <span class="mat-chip-pill">黄金の輝き</span>
+                  <span class="mat-chip-pill">鏡面研磨◎</span>
+                  <span class="mat-chip-pill">工芸装飾</span>
+                </div>
+              </div>
+            </button>
+
+            <button class="material-card-btn btn-select-free-mat" data-material="steel">
+              <div class="mat-color-preview-box" style="background: linear-gradient(135deg, #aeb3b7, #3b3e40);">
+                <span class="mat-box-icon">🔩</span>
+              </div>
+              <div class="mat-btn-content">
+                <div class="mat-btn-title-row">
+                  <strong class="mat-card-name">炭素鋼 (S45C)</strong>
+                  <span class="mat-btn-badge hard">★★★★☆</span>
+                </div>
+                <span class="mat-btn-cat">高張力鋼 / 硬質 (高強度鋼)</span>
+                <small class="mat-btn-desc">硬質スチール。切削時に激しい火花が飛ぶ本格工業素材。</small>
+                <div class="mat-tag-list">
+                  <span class="mat-chip-pill">激しい火花</span>
+                  <span class="mat-chip-pill">高耐久硬質</span>
+                  <span class="mat-chip-pill">機械構造用</span>
+                </div>
+              </div>
+            </button>
+
+            <button class="material-card-btn btn-select-free-mat" data-material="titanium">
+              <div class="mat-color-preview-box" style="background: linear-gradient(135deg, #949ba6, #2f343b);">
+                <span class="mat-box-icon">🚀</span>
+              </div>
+              <div class="mat-btn-content">
+                <div class="mat-btn-title-row">
+                  <strong class="mat-card-name">チタン合金 (Ti-6Al-4V)</strong>
+                  <span class="mat-btn-badge extreme">★★★★★</span>
+                </div>
+                <span class="mat-btn-cat">難削耐熱合金 / 極硬 (最高難度)</span>
+                <small class="mat-btn-desc">航空宇宙規格の超高強度合金。硬質切削・最高峰の工作素材。</small>
+                <div class="mat-tag-list">
+                  <span class="mat-chip-pill">航空宇宙規格</span>
+                  <span class="mat-chip-pill">超高強度</span>
+                  <span class="mat-chip-pill">極限難易度</span>
+                </div>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal 4: Inspection & Scoring Results -->
+    <div id="modalInspection" class="modal-overlay" style="display: none;">
+      <div class="modal-card inspection-card">
+        <div class="modal-header">
+          <h3>🔍 製品検査・検品レポート</h3>
+          <button class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="inspect-rank-container">
+            <div class="inspect-rank-label">検品評価ランク</div>
+            <div class="inspect-rank-badge" id="inspectRank">S</div>
+            <div class="inspect-status-text" id="inspectStatus">🎉 検品合格！素晴らしい仕上がりです！</div>
+          </div>
+
+          <!-- Inspection Visual Comparison -->
+          <div class="inspect-compare-grid">
+            <div class="inspect-compare-card">
+              <span class="compare-badge target-badge">🎯 目標設計（完成品）</span>
+              <canvas id="inspectTargetCanvas" width="270" height="90"></canvas>
+            </div>
+            <div class="inspect-compare-card">
+              <span class="compare-badge actual-badge">🛠️ 実加工品（あなたの切削）</span>
+              <canvas id="inspectActualCanvas" width="270" height="90"></canvas>
+            </div>
+          </div>
+
+          <div class="inspect-metrics-grid">
+            <div class="metric-item">
+              <span class="metric-title">設計図一致率</span>
+              <span class="metric-val" id="inspectScore">98.5%</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-title">平均寸法誤差</span>
+              <span class="metric-val" id="inspectAvgError">±0.42 mm</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-title">表面研磨度 (ツヤ)</span>
+              <span class="metric-val" id="inspectPolish">85%</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-title">獲得報酬</span>
+              <span class="metric-val reward" id="inspectReward">+¥180</span>
+            </div>
+          </div>
+
+          <div class="modal-action-row">
+            <button class="btn-modal-primary" id="btnCollectReward">納品して報酬を受け取る</button>
+            <button class="btn-modal-secondary modal-close">閉じて再加工する</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal 5: Help & Tutorial -->
+    <div id="modalHelp" class="modal-overlay" style="display: none;">
+      <div class="modal-card help-card">
+        <div class="modal-header">
+          <h3>📖 旋盤マイスター 操作マニュアル</h3>
+          <button class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body help-content">
+          <h4>🎮 基本操作方法</h4>
+          <ul>
+            <li><strong>📱 スマホ・タッチ操作:</strong> バイトの操作グリップを直接指で掴んでドラッグして削るか、画面下の<strong>「🕹️ バイト微調整送りジョグパッド」</strong>をタップまたは長押しすることで、片手でも0.4mm単位（微速）や1.6mm単位（高速）で精密に切削送りできます。</li>
+            <li><strong>🖱️ マウス操作:</strong> バイト（刃物台・操作グリップ）を掴んでドラッグすると、刃先が素材に向かってスムーズに移動し切削します（十字カーソルに視界を遮られず、刃先と素材がクリアに見えます）。</li>
+            <li><strong>⌨️ キーボード操作:</strong> <code>A / D</code> または <code>← / →</code> で左右移動、<code>W / S</code> または <code>↑ / ↓</code> で刃先の切り込み深さを微調整できます。</li>
+            <li><strong>スペースキー:</strong> 自動送り（導入時）のON/OFFを切り替えます。</li>
+          </ul>
+
+          <h4>🌿 発熱抑制・省エネ設定（スマホ向け）</h4>
+          <ul>
+            <li>画面右上の<strong>「⚡ 標準 60FPS」</strong>ボタンをタップすると、<strong>「🌿 省エネ 30FPS」</strong> ⇄ <strong>「⚡ 標準 60FPS」</strong> ⇄ <strong>「🚀 高FPS 120」</strong>をいつでも切り替えられます。</li>
+            <li>スマホが熱くなる場合やバッテリーを節約したい場合は、<strong>「🌿 省エネ 30FPS」</strong>に設定することで端末の発熱・消費電力を大幅に抑えられます。</li>
+          </ul>
+
+          <h4>📱 スマホでの快適プレイ（外部アプリ不要・ホーム画面追加）</h4>
+          <ul>
+            <li><strong>Junoなどの外部アプリは不要:</strong> 本作はブラウザ（SafariやChrome）だけで完全に動作します。</li>
+            <li><strong>ホーム画面に追加で専用アプリ化:</strong> Safariで開いた状態で、画面下部の<strong>共有ボタン（⬆️）</strong> ➔ <strong>「ホーム画面に追加」</strong>をタップすると、ホーム画面に専用アイコンが配置され、次回からワンタップで全画面ゲームとして遊べます！</li>
+            <li><strong>ファイルから開く場合:</strong> iPhoneの「ファイル」アプリで『旋盤マイスター.html』を<strong>長押し</strong> ➔ <strong>「共有」</strong> ➔ <strong>「Safari」</strong>を選択すると、他のアプリを経由せずに直接開けます。</li>
+          </ul>
+
+          <h4>🛠️ バイト（工具）の使い分け</h4>
+          <ul>
+            <li><strong>平バイト:</strong> 幅広で一気に削れます。平面加工や荒削りに最適。</li>
+            <li><strong>剣バイト:</strong> 先端が鋭いV字刃。シャープな段差や細い溝入れに必須。</li>
+            <li><strong>丸バイト:</strong> 先端が丸いR刃。滑らかな曲面や丸いくびれを削るのに適しています。</li>
+            <li><strong>耐水ペーパー:</strong> 表面の削り目を研磨し、美しい光沢と鏡面ツヤを出します。リアルタイム研磨度メーターとキラキラ光沢エフェクトでツヤの仕上がりがひと目で分かります！</li>
+            <li><strong>測定ノギス:</strong> 素材を削らずに、各位置の直径φと目標との誤差を直接計測できます。</li>
+          </ul>
+
+          <h4>🎯 依頼オーダーと検品合格のコツ</h4>
+          <ul>
+            <li><strong>🖋️ 墨打ち（青ニス）機能:</strong> 目標の理想寸法まで削り落とせた箇所は<strong>鮮やかな青色（ブルー）</strong>に変化！どこまで削ればいいか直感的に把握できます。</li>
+            <li><strong>🎯 オーバーレイ選択機能:</strong> 「🎯 完成予定品（目標形状のみ透過）」と「✂️ 削る範囲（削り落とすべき余肉ゾーンのみハイライト）」をボタンで明確に切り替え可能！完成品と削る場所が混ざらずスッキリ視認できます。</li>
+            <li><strong>🎲 ランダム製品（都度更新）:</strong> 「🎲 ランダム製品」ボタンを押すか、納品時自動更新をONにしておくと、納品するたびに毎回新しい特注製品が自動生成されて無限に楽しめます！</li>
+            <li>水色の<strong>設計図ガイドライン</strong>に合わせて外径を削り落としましょう。</li>
+            <li>目標より削りすぎ（アンダーカット）てしまうと赤く警告表示され、減点対象になります。</li>
+            <li>公差内に収めて「完成品を検品・納品する」ボタンを押すと、ランクに応じた報酬と評判が手に入ります！</li>
+            <li>削り直したい場合は「素材リセット」、納品実績や所持金を最初からやり直したい場合はヘッダーの「🔄 リセット」またはオーダー一覧の「🗑️ 納品リセット」をご利用ください。</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

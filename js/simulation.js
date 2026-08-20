@@ -634,13 +634,17 @@ export class LatheSimulation {
       // 4. Workpiece (Rotated 3D Cylindrical Lighting & Texture)
     this.renderWorkpiece(ctx);
 
-      // 5. Overlay Guides (Mutually Exclusive: Target Product vs Cut Area)
+      // 5. Optional overlay modes kept for the existing UI.
       if (this.hasTarget) {
         if (this.overlayMode === 'target' || (this.showGhostOverlay && this.overlayMode !== 'cutArea')) {
           this.renderGhostOverlay(ctx);
         } else if (this.overlayMode === 'cutArea') {
           this.renderCutAreaOverlay(ctx);
         }
+
+        // Permanent machining guide: current stock -> excess cut area -> target outline.
+        // This is visual-only and intentionally does not participate in collision/cutting.
+        this.renderProcessingGuide(ctx);
       }
 
       // 6. Particles & Sparks
@@ -1112,6 +1116,66 @@ export class LatheSimulation {
 
     ctx.fillStyle = hasAnyCutArea ? '#fbbf24' : '#4ade80';
     ctx.fillText(tagText, tagX + tagPad + 4, tagY + 16);
+    ctx.restore();
+  }
+
+  /**
+   * Draws the always-visible machining guide over the physical workpiece.
+   * The fill is calculated from currentR - targetR, so it disappears slice by
+   * slice as material is removed.  All positions use the same mm-to-canvas
+   * transform as renderWorkpiece(), which keeps desktop and mobile identical.
+   */
+  renderProcessingGuide(ctx) {
+    if (!this.hasTarget || !this.radii || !this.targetRadii) return;
+
+    const sliceWidthPx = this.workWidthPx / (this.numSlices - 1);
+
+    ctx.save();
+
+    // Middle layer: only material that still lies outside the finished profile.
+    // A neutral translucent ink preserves the normal material texture below it.
+    ctx.fillStyle = 'rgba(20, 20, 20, 0.27)';
+    for (let i = 0; i < this.numSlices; i++) {
+      const currentR = Math.max(0, this.radii[i]);
+      const targetR = Math.max(0, this.targetRadii[i]);
+      if (currentR <= targetR + 0.05) continue;
+
+      const px = this.workStartX + i * sliceWidthPx;
+      const width = sliceWidthPx + 0.75;
+      const currentPx = currentR * this.scale;
+      const targetPx = targetR * this.scale;
+      const excessPx = currentPx - targetPx;
+
+      ctx.fillRect(px, this.centerY - currentPx, width, excessPx);
+      ctx.fillRect(px, this.centerY + targetPx, width, excessPx);
+    }
+
+    // Front layer: an opaque black finished-shape contour. Draw it last so it
+    // stays legible over wood, metal, cutting overlays, rotation highlights,
+    // and the changing workpiece silhouette.
+    ctx.beginPath();
+    for (let i = 0; i < this.numSlices; i++) {
+      const px = this.workStartX + i * sliceWidthPx;
+      const py = this.centerY - this.targetRadii[i] * this.scale;
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    const lastR = this.targetRadii[this.numSlices - 1] * this.scale;
+    ctx.lineTo(this.workEndX, this.centerY + lastR);
+    for (let i = this.numSlices - 1; i >= 0; i--) {
+      const px = this.workStartX + i * sliceWidthPx;
+      const py = this.centerY + this.targetRadii[i] * this.scale;
+      ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.96)';
+    ctx.lineWidth = Math.max(2.25, Math.min(3.25, this.scale * 1.15));
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+    ctx.shadowColor = 'rgba(255, 255, 255, 0.45)';
+    ctx.shadowBlur = 1.5;
+    ctx.stroke();
+
     ctx.restore();
   }
 

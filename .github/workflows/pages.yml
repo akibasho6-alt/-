@@ -31,7 +31,13 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Build
-        run: npm run build
+        run: npm run build:pages
+      - name: Verify Pages artifact
+        run: |
+          test -f dist/index.html
+          test -f dist/js/bundle.js
+          grep -q 'src="js/bundle.js"' dist/index.html
+          if grep -q 'src="js/app.js"' dist/index.html; then exit 1; fi
       - name: Configure Pages
         uses: actions/configure-pages@v5
       - name: Upload site

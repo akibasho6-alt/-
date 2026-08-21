@@ -400,6 +400,9 @@ export class LatheGame {
       btn.addEventListener('click', () => {
         soundManager.playClick();
         selectTool(btn.dataset.tool);
+        if (btn.closest('.mobile-tool-drawer')) {
+          closeMobileToolMenu();
+        }
       });
     });
 
@@ -407,6 +410,26 @@ export class LatheGame {
       toolSelect.addEventListener('change', () => {
         soundManager.playClick();
         selectTool(toolSelect.value);
+      });
+    }
+
+    const mobileToolDrawer = document.getElementById('mobileToolDrawer');
+    const mobileToolMenuButton = document.getElementById('btnMobileToolMenu');
+    const closeMobileToolMenu = () => {
+      if (!mobileToolDrawer) return;
+      mobileToolDrawer.classList.remove('open');
+      mobileToolDrawer.setAttribute('aria-hidden', 'true');
+      if (mobileToolMenuButton) mobileToolMenuButton.setAttribute('aria-expanded', 'false');
+    };
+    if (mobileToolMenuButton && mobileToolDrawer) {
+      mobileToolMenuButton.addEventListener('click', () => {
+        mobileToolDrawer.classList.add('open');
+        mobileToolDrawer.setAttribute('aria-hidden', 'false');
+        mobileToolMenuButton.setAttribute('aria-expanded', 'true');
+      });
+      document.getElementById('btnCloseMobileToolMenu')?.addEventListener('click', closeMobileToolMenu);
+      mobileToolDrawer.addEventListener('click', (event) => {
+        if (event.target === mobileToolDrawer) closeMobileToolMenu();
       });
     }
 

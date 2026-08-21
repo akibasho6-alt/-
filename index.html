@@ -262,6 +262,29 @@
 
         <!-- Machine Control Panel -->
         <div class="controls-panel">
+          <button type="button" id="btnMobileToolMenu" class="mobile-tool-menu-button" aria-controls="mobileToolDrawer" aria-expanded="false">
+            <span class="hamburger-icon">☰</span>
+            <span>加工ツール</span>
+          </button>
+
+          <div id="mobileToolDrawer" class="mobile-tool-drawer" aria-hidden="true">
+            <div class="mobile-tool-drawer-panel">
+              <div class="mobile-tool-drawer-header">
+                <strong>🛠️ 加工ツール選択</strong>
+                <button type="button" id="btnCloseMobileToolMenu" class="mobile-tool-menu-close" aria-label="閉じる">×</button>
+              </div>
+              <div class="mobile-tool-list">
+                <button class="tool-btn active" data-tool="roughing"><span class="tool-icon">⬛</span><span class="tool-name">平バイト</span></button>
+                <button class="tool-btn" data-tool="pointed"><span class="tool-icon">🔻</span><span class="tool-name">剣バイト（溝）</span></button>
+                <button class="tool-btn" data-tool="threading"><span class="tool-icon">🔩</span><span class="tool-name">ねじ切りバイト</span></button>
+                <button class="tool-btn" data-tool="round"><span class="tool-icon">🔴</span><span class="tool-name">丸バイト（R）</span></button>
+                <button class="tool-btn" data-tool="parting"><span class="tool-icon">❙</span><span class="tool-name">突っ切りバイト</span></button>
+                <button class="tool-btn finisher" data-tool="sandpaper"><span class="tool-icon">✨</span><span class="tool-name">耐水ペーパー</span></button>
+                <button class="tool-btn measuring" data-tool="caliper"><span class="tool-icon">📏</span><span class="tool-name">測定ノギス</span></button>
+              </div>
+            </div>
+          </div>
+
           <!-- Tool Palette -->
           <div class="tool-palette-container">
             <div class="palette-header">

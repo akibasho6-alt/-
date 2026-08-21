@@ -157,10 +157,10 @@ const RANDOM_CLIENTS = [
 
 const RANDOM_MAT_POOL = [
   { id: 'wood', name: '木材', minRep: 0, stockR: 45 },
-  { id: 'aluminum', name: 'アルミ', minRep: 40, stockR: 42 },
-  { id: 'brass', name: '真鍮', minRep: 120, stockR: 44 },
-  { id: 'steel', name: 'スチール', minRep: 250, stockR: 45 },
-  { id: 'titanium', name: 'チタン', minRep: 450, stockR: 48 }
+  { id: 'aluminum', name: 'アルミ', minRep: 0, stockR: 42 },
+  { id: 'brass', name: '真鍮', minRep: 0, stockR: 44 },
+  { id: 'steel', name: 'スチール', minRep: 0, stockR: 45 },
+  { id: 'titanium', name: 'チタン', minRep: 0, stockR: 48 }
 ];
 
 export function generateRandomMission(playerRep = 0) {
@@ -173,8 +173,9 @@ export function generateRandomMission(playerRep = 0) {
   const client = RANDOM_CLIENTS[Math.floor(Math.random() * RANDOM_CLIENTS.length)];
   const missionNumber = Math.floor(Math.random() * 900) + 100;
   
-  // Random shape type (0: Multi-step, 1: Tapered Spindle, 2: Knob/Bulb, 3: Grooved Sleeve, 4: Bell Nozzle, 5: Hourglass Spool)
-  const shapeType = Math.floor(Math.random() * 6);
+  // Each branch represents one visibly distinct product family. Similar
+  // variants stay within that family instead of appearing as separate types.
+  const shapeType = Math.floor(Math.random() * 10);
   
   let title = '';
   let desc = '';
@@ -272,7 +273,7 @@ export function generateRandomMission(playerRep = 0) {
       }
     };
     hints = '丸バイトで滑らかな曲線を描き、耐水ペーパーで光沢仕上げを行いましょう。';
-  } else {
+  } else if (shapeType === 5) {
     // Hourglass Spool
     productType = 'くびれスプール';
     const centerR = Math.floor(Math.random() * 5) + 14;
@@ -285,6 +286,60 @@ export function generateRandomMission(playerRep = 0) {
       return centerR + (u * u) * (edgeR - centerR);
     };
     hints = '左右対称のくびれになるように丸バイトを当てましょう。';
+  } else if (shapeType === 6) {
+    // Industrial threaded shaft / screw
+    productType = '工業用ねじ軸';
+    const shaftR = Math.floor(Math.random() * 5) + 20;
+    const threadDepth = Math.floor(Math.random() * 3) + 3;
+    title = `工業用 ${chosenMat.name} ねじ軸 #${missionNumber}`;
+    desc = `${client}からの機械組立用ねじ軸。等間隔のねじ山と取付カラーを加工してください。`;
+    profileFunc = (t) => {
+      if (t < 0.16) return shaftR + 10;
+      if (t > 0.88) return shaftR - 4;
+      const thread = Math.abs(Math.sin((t - 0.16) * Math.PI * 18));
+      return shaftR - thread * threadDepth;
+    };
+    hints = '剣バイトで等間隔のねじ溝を仕上げます。';
+  } else if (shapeType === 7) {
+    // Pulley
+    productType = '駆動プーリー';
+    const hubR = Math.floor(Math.random() * 5) + 18;
+    const rimR = Math.floor(Math.random() * 6) + 35;
+    title = `産業機械用 ${chosenMat.name} 駆動プーリー #${missionNumber}`;
+    desc = `${client}のベルト駆動装置に使用する、中央溝付きプーリーです。`;
+    profileFunc = (t) => {
+      if (t < 0.18 || t > 0.82) return rimR;
+      if (t > 0.42 && t < 0.58) return hubR - 5;
+      return hubR;
+    };
+    hints = '両端のリムを残し、中央のベルト溝を均等に削ります。';
+  } else if (shapeType === 8) {
+    // Hydraulic piston
+    productType = '油圧ピストン';
+    const rodR = Math.floor(Math.random() * 5) + 15;
+    const pistonR = Math.floor(Math.random() * 6) + 35;
+    title = `油圧機器用 ${chosenMat.name} ピストン #${missionNumber}`;
+    desc = `${client}の油圧シリンダーに組み込むピストンロッドです。`;
+    profileFunc = (t) => {
+      if (t < 0.58) return rodR;
+      if (t < 0.66) return rodR + 5;
+      if (t < 0.9) return pistonR;
+      return pistonR - 5;
+    };
+    hints = '長いロッド部を均一径にし、端部のピストン段差を残します。';
+  } else {
+    // Pipe coupling
+    productType = '配管継手';
+    const neckR = Math.floor(Math.random() * 5) + 20;
+    const bodyR = Math.floor(Math.random() * 6) + 34;
+    title = `高圧配管用 ${chosenMat.name} 継手 #${missionNumber}`;
+    desc = `${client}の高圧配管ラインに使用する段付きカップリングです。`;
+    profileFunc = (t) => {
+      if (t < 0.2 || t > 0.8) return neckR;
+      if (t < 0.3 || t > 0.7) return bodyR - 5;
+      return bodyR;
+    };
+    hints = '接続端の径を揃え、中央本体との肩を明確に仕上げます。';
   }
 
   // Generous reward and tolerance

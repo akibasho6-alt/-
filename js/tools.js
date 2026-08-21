@@ -19,6 +19,15 @@ export const TOOL_TYPES = {
     depthRate: 1.3,
     description: '先端が鋭利なV字形状。細かな段差や鋭角な溝入れ加工に必須。'
   },
+  threading: {
+    id: 'threading',
+    name: 'ねじ切りバイト',
+    shortName: 'ねじ切り',
+    width: 6,
+    shape: 'threading',
+    depthRate: 0.9,
+    description: '60度の鋭い刃先で、ねじ軸の細かな山と谷を一本ずつ精密に加工する専用バイト。'
+  },
   round: {
     id: 'round',
     name: 'R曲面丸バイト',

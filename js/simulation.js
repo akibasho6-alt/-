@@ -419,6 +419,9 @@ export class LatheSimulation {
           let shapeOffsetY = 0;
           if (this.currentTool.shape === 'pointed') {
             shapeOffsetY = distFromToolCenterMm * 0.9;
+          } else if (this.currentTool.shape === 'threading') {
+            // Narrow 60-degree V profile for cutting individual thread roots.
+            shapeOffsetY = distFromToolCenterMm * 1.73;
           } else if (this.currentTool.shape === 'round') {
             const r = toolMmHalfWidth;
             if (distFromToolCenterMm <= r) {
@@ -1536,6 +1539,20 @@ export class LatheSimulation {
         ctx.fill();
         ctx.restore();
       }
+    } else if (tool.shape === 'threading') {
+      // 60-degree threading insert with a narrow, high-visibility tip.
+      const insertColor = this.bladeGrade.id === 'diamond' ? '#38bdf8' : (this.bladeGrade.id === 'carbide' ? '#fbbf24' : '#e2e8f0');
+      ctx.fillStyle = insertColor;
+      ctx.beginPath();
+      ctx.moveTo(tipPxX, tipPxY);
+      ctx.lineTo(tipPxX - 8, tipPxY + 14);
+      ctx.lineTo(tipPxX, tipPxY + 11);
+      ctx.lineTo(tipPxX + 8, tipPxY + 14);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = '#ef4444';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
     } else if (tool.shape === 'pointed') {
       // Diamond / V-tip insert (Gold / Silver carbide)
       const insertColor = this.bladeGrade.id === 'diamond' ? '#38bdf8' : (this.bladeGrade.id === 'carbide' ? '#fbbf24' : '#e2e8f0');

@@ -7,7 +7,9 @@ module.exports = {
   output: {
     path: path.resolve(__dirname, 'dist'),
     clean: true,
-    filename: 'js/bundle.js',
+    // A content hash prevents GitHub Pages/CDN and browser caches from
+    // serving an older game bundle after a deployment.
+    filename: 'js/bundle.[contenthash:8].js',
     publicPath: '',
   },
 };

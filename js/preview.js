@@ -60,7 +60,8 @@ export function renderTargetPreview(canvas, mission, options = {}) {
   const drawW = width - paddingX * 2;
   const centerY = height * 0.46;
 
-  // Calculate max target radius across profile to determine vertical scale
+  // Measure the target profile, but keep its display scale tied to the source
+  // stock so the target and the material are shown at the same physical scale.
   let maxTargetR = 0;
   let minTargetR = 999;
   const targetRadii = new Float32Array(numSlices);
@@ -73,9 +74,11 @@ export function renderTargetPreview(canvas, mission, options = {}) {
   }
   if (maxTargetR <= 0) maxTargetR = mission.stockRadius || 40;
 
-  // Scale to fit canvas height with room for dimension text
+  // Scale to fit the original stock diameter with room for dimension text.
+  // Falling back to maxTargetR preserves previews for missions without stock data.
   const maxAvailableH = (height - paddingY * 2) * 0.72;
-  const scale = (maxAvailableH / 2) / maxTargetR;
+  const displayRadius = Math.max(maxTargetR, mission.stockRadius || maxTargetR);
+  const scale = (maxAvailableH / 2) / displayRadius;
 
   // Centerline (dash-dot style: ― · ― · ―)
   ctx.save();

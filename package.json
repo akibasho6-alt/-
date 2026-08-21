@@ -13,7 +13,7 @@
     "start": "webpack serve --open --config webpack.config.dev.js",
     "mobile": "node serve-mobile.js",
     "build:pages": "webpack --config webpack.config.prod.js",
-    "build": "webpack --config webpack.config.prod.js && node -e \"require('fs').copyFileSync('dist/js/bundle.js', 'js/bundle.js')\" && node build-standalone.js"
+    "build": "webpack --config webpack.config.prod.js && node build-standalone.js"
   },
   "devDependencies": {
     "copy-webpack-plugin": "^11.0.0",

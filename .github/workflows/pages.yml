@@ -35,8 +35,8 @@ jobs:
       - name: Verify Pages artifact
         run: |
           test -f dist/index.html
-          test -f dist/js/bundle.js
-          grep -q 'src="js/bundle.js"' dist/index.html
+          test "$(find dist/js -maxdepth 1 -type f -name 'bundle.*.js' | wc -l)" -eq 1
+          grep -Eq 'src="js/bundle\.[0-9a-f]+\.js"' dist/index.html
           if grep -q 'src="js/app.js"' dist/index.html; then exit 1; fi
       - name: Configure Pages
         uses: actions/configure-pages@v5

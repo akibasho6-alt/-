@@ -178,6 +178,7 @@ export function generateRandomMission(playerRep = 0) {
   
   let title = '';
   let desc = '';
+  let productType = '';
   let profileFunc = (t) => 25;
   let hints = 'ガイドラインと透過オーバーレイに合わせて丁寧に削り出しましょう。';
   const stockRadius = chosenMat.stockR;
@@ -186,6 +187,7 @@ export function generateRandomMission(playerRep = 0) {
   // Generate varied procedural profile
   if (shapeType === 0) {
     // Multi-step
+    productType = '多段ステップシャフト';
     const r1 = Math.floor(Math.random() * 8) + 14;
     const r2 = Math.floor(Math.random() * 8) + 24;
     const r3 = Math.floor(Math.random() * 6) + 34;
@@ -202,6 +204,7 @@ export function generateRandomMission(playerRep = 0) {
     hints = '平バイトを使って各段差を均一に削り落とすのがコツです。';
   } else if (shapeType === 1) {
     // Tapered Spindle
+    productType = 'テーパースピンドル';
     const tipR = Math.floor(Math.random() * 6) + 12;
     const baseR = Math.floor(Math.random() * 8) + 30;
     const flangeR = Math.floor(Math.random() * 6) + 38;
@@ -217,6 +220,7 @@ export function generateRandomMission(playerRep = 0) {
     hints = '丸バイトまたは平バイトを斜めに送ると綺麗なテーパー面が作れます。';
   } else if (shapeType === 2) {
     // Knob / Handle
+    productType = 'ノブ・ハンドル';
     const neckR = Math.floor(Math.random() * 5) + 14;
     const bulbR = Math.floor(Math.random() * 8) + 32;
     const baseR = Math.floor(Math.random() * 6) + 22;
@@ -235,6 +239,7 @@ export function generateRandomMission(playerRep = 0) {
     hints = '丸バイトでくびれと丸みを削り、サンドペーパーでしっかり磨きましょう。';
   } else if (shapeType === 3) {
     // Grooved Sleeve / Bushing
+    productType = '溝付きスリーブ';
     const bodyR = Math.floor(Math.random() * 6) + 22;
     const grooveR = Math.floor(Math.random() * 5) + 13;
     const flangeR = Math.floor(Math.random() * 6) + 36;
@@ -250,6 +255,7 @@ export function generateRandomMission(playerRep = 0) {
     hints = '中央の細い溝入れには先端の尖った剣バイトが最適です。';
   } else if (shapeType === 4) {
     // Bell Nozzle
+    productType = 'ベルノズル';
     const throatR = Math.floor(Math.random() * 5) + 13;
     const bellR = Math.floor(Math.random() * 6) + 38;
     const inletR = Math.floor(Math.random() * 6) + 28;
@@ -268,6 +274,7 @@ export function generateRandomMission(playerRep = 0) {
     hints = '丸バイトで滑らかな曲線を描き、耐水ペーパーで光沢仕上げを行いましょう。';
   } else {
     // Hourglass Spool
+    productType = 'くびれスプール';
     const centerR = Math.floor(Math.random() * 5) + 14;
     const edgeR = Math.floor(Math.random() * 6) + 34;
     
@@ -289,6 +296,7 @@ export function generateRandomMission(playerRep = 0) {
     title,
     client,
     category: 'ランダム特注',
+    productType,
     materialId: chosenMat.id,
     stockRadius,
     length,

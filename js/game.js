@@ -939,6 +939,7 @@ export class LatheGame {
 
   updateMissionInfoUI() {
     const titleEl = document.getElementById('missionTitle');
+    const productTypeEl = document.getElementById('missionProductType');
     const clientEl = document.getElementById('missionClient');
     const descEl = document.getElementById('missionDesc');
     const matEl = document.getElementById('missionMaterial');
@@ -969,6 +970,7 @@ export class LatheGame {
     let activeMat = this.sim ? this.sim.material : MATERIALS.wood;
 
     if (this.state.freeMode) {
+      if (productTypeEl) productTypeEl.textContent = '自由工作';
       if (titleEl) titleEl.textContent = 'フリー削り出し加工モード';
       if (clientEl) clientEl.textContent = '自由工作ワークショップ';
       if (descEl) descEl.textContent = '図面の制約なく、好きなツールで自由に素材を削ることができます。';
@@ -985,6 +987,7 @@ export class LatheGame {
       const m = this.currentMission;
       activeMat = MATERIALS[m.materialId] || MATERIALS.wood;
       if (titleEl) titleEl.textContent = m.title;
+      if (productTypeEl) productTypeEl.textContent = m.productType || m.category || '標準発注';
       if (clientEl) clientEl.textContent = m.client;
       if (descEl) descEl.textContent = m.description;
       if (matEl) matEl.textContent = activeMat.name;
@@ -1077,7 +1080,7 @@ export class LatheGame {
         </div>
         <div class="mission-card-content">
           <div class="mission-header">
-            <span class="mission-category random">ランダム発注 ${index + 1}/50</span>
+            <span class="mission-category random">発注 ${index + 1}/50 ・ ${m.productType}</span>
             <h4 class="mission-name">${m.title}</h4>
           </div>
           <p class="mission-client">依頼主: ${m.client}</p>

@@ -185,9 +185,9 @@ export class LatheGame {
     }
   }
 
-  startRandomMission(showToast = true) {
+  startRandomMission(showToast = true, missionOverride = null) {
     soundManager.playClick();
-    const mission = generateRandomMission(this.state.reputation);
+    const mission = missionOverride || generateRandomMission(this.state.reputation);
     this.currentMission = mission;
     this.state.currentMissionId = mission.id;
     this.state.isRandomOrder = true;
@@ -1060,7 +1060,51 @@ export class LatheGame {
     });
     container.appendChild(randomCard);
 
-    // 2. Standard Defined Missions
+    // 2. Fifty fresh made-to-order products. This list is regenerated every
+    // time the order window is rendered, so shape, material and client vary.
+    const randomOrders = Array.from(
+      { length: 50 },
+      () => generateRandomMission(this.state.reputation)
+    );
+
+    randomOrders.forEach((m, index) => {
+      const mat = MATERIALS[m.materialId] || MATERIALS.wood;
+      const card = document.createElement('div');
+      card.className = 'mission-card random-order-card';
+      card.innerHTML = `
+        <div class="mission-card-preview">
+          <canvas class="card-preview-canvas" width="130" height="64"></canvas>
+        </div>
+        <div class="mission-card-content">
+          <div class="mission-header">
+            <span class="mission-category random">ランダム発注 ${index + 1}/50</span>
+            <h4 class="mission-name">${m.title}</h4>
+          </div>
+          <p class="mission-client">依頼主: ${m.client}</p>
+          <p class="mission-desc-short">${m.description}</p>
+          <div class="mission-footer">
+            <span class="mission-mat-tag" style="border-left: 3px solid ${mat.colorBase};">
+              ${mat.icon} ${mat.name} <small style="color:#94a3b8;">(${mat.hardnessStars})</small>
+            </span>
+            <span>公差: ±${m.tolerance}mm</span>
+            <span class="mission-reward">報酬: ¥${m.reward.toLocaleString()}</span>
+          </div>
+        </div>
+      `;
+
+      const previewCanvas = card.querySelector('.card-preview-canvas');
+      if (previewCanvas) {
+        renderTargetPreview(previewCanvas, m, { showDimensions: false, isMini: true });
+      }
+
+      card.addEventListener('click', () => {
+        this.startRandomMission(true, m);
+        document.getElementById('modalMissions').style.display = 'none';
+      });
+      container.appendChild(card);
+    });
+
+    // 3. Standard Defined Missions
     MISSIONS.forEach(m => {
       const isLocked = this.state.reputation < m.requiredRep;
       const completed = this.state.completedMissions[m.id];

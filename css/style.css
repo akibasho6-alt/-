@@ -1087,6 +1087,31 @@ body {
   color: var(--text-muted);
 }
 
+.tool-select-field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  padding: 9px 12px;
+  background: #0f172a;
+  border: 1px solid #38bdf8;
+  border-radius: 8px;
+  color: #e2e8f0;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.tool-select-field select {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 10px;
+  background: #1e293b;
+  border: 1px solid #64748b;
+  border-radius: 6px;
+  color: #f8fafc;
+  font: inherit;
+}
+
 .tool-buttons-row {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));

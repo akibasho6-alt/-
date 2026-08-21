@@ -268,6 +268,18 @@
               <span class="palette-title">🛠️ 加工ツール選択</span>
               <span class="tool-desc-inline" id="currentToolDesc">幅広で一気に削れる荒加工用。平面を素早く成形するのに最適。</span>
             </div>
+            <label class="tool-select-field" for="toolSelect">
+              <span>使用する加工ツール</span>
+              <select id="toolSelect">
+                <option value="roughing">⬛ 平バイト</option>
+                <option value="pointed">🔻 剣バイト（溝）</option>
+                <option value="threading">🔩 ねじ切りバイト</option>
+                <option value="round">🔴 丸バイト（R）</option>
+                <option value="parting">❙ 突っ切りバイト</option>
+                <option value="sandpaper">✨ 耐水ペーパー</option>
+                <option value="caliper">📏 測定ノギス</option>
+              </select>
+            </label>
             <div class="tool-buttons-row">
               <button class="tool-btn active" data-tool="roughing">
                 <span class="tool-icon">⬛</span>

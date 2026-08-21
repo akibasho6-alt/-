@@ -281,6 +281,8 @@ export class LatheGame {
       toolButtons.forEach(b => {
         b.classList.toggle('active', b.dataset.tool === 'roughing');
       });
+      const toolSelect = document.getElementById('toolSelect');
+      if (toolSelect) toolSelect.value = 'roughing';
       const toolDesc = document.getElementById('currentToolDesc');
       if (toolDesc && TOOL_TYPES.roughing) toolDesc.textContent = TOOL_TYPES.roughing.description;
 
@@ -384,20 +386,29 @@ export class LatheGame {
   bindUI() {
     // 1. Tool Selection Buttons
     const toolButtons = document.querySelectorAll('.tool-btn');
+    const toolSelect = document.getElementById('toolSelect');
+    const selectTool = (toolId) => {
+      if (!TOOL_TYPES[toolId]) return;
+      this.sim.currentTool = TOOL_TYPES[toolId];
+      toolButtons.forEach(b => b.classList.toggle('active', b.dataset.tool === toolId));
+      if (toolSelect) toolSelect.value = toolId;
+      const toolDesc = document.getElementById('currentToolDesc');
+      if (toolDesc) toolDesc.textContent = TOOL_TYPES[toolId].description;
+    };
+
     toolButtons.forEach(btn => {
       btn.addEventListener('click', () => {
         soundManager.playClick();
-        toolButtons.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-
-        const toolId = btn.dataset.tool;
-        if (TOOL_TYPES[toolId]) {
-          this.sim.currentTool = TOOL_TYPES[toolId];
-          const toolDesc = document.getElementById('currentToolDesc');
-          if (toolDesc) toolDesc.textContent = TOOL_TYPES[toolId].description;
-        }
+        selectTool(btn.dataset.tool);
       });
     });
+
+    if (toolSelect) {
+      toolSelect.addEventListener('change', () => {
+        soundManager.playClick();
+        selectTool(toolSelect.value);
+      });
+    }
 
     // 2. Machine Controls
     const powerBtn = document.getElementById('btnPower');
